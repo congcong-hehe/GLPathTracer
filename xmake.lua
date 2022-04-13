@@ -6,6 +6,7 @@ target("RealtimeRender")
     set_kind("binary")
     add_files("src/*.cpp")
     add_files("src/*.c")
+    add_files("src/common/*.cpp")
 
     add_includedirs("third/include")
     add_linkdirs("third/lib")
