@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include "common/shader.h"
+#include "common/vertex_buffer.h"
 
 using namespace std;
 
@@ -35,35 +36,29 @@ int main()
     }
 
     Shader ourShader("../../../../src/shader/base.vs","../../../../src/shader/base.fs");
+    glm::vec3 origin(0.0f, 0.0f, 0.0f);
+    glm::vec3 horizontal(4.0f, 0.0f, 0.0f);
+    glm::vec3 vertical(0.0f, 3.0f, 0.0f);
+    float focal_length = 1.0;   // 摄像机到远平面的距离
+
+    ourShader.use();
+    ourShader.setVec3("camera.ori", origin);
+    ourShader.setVec3("camera.horizontal", horizontal);
+    ourShader.setVec3("camera.vertical", vertical);
+    
+    ourShader.setVec3("camera.lower_left_corner", origin - horizontal / 2.0f - vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length));
 
     float vertices[] = {
-         0.5f,  0.5f, 0.0f,  // top right
-         0.5f, -0.5f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.0f   // top left 
+         1.0f,  1.f, 0.0f,  // top right
+         1.0f, -1.0f, 0.0f,  // bottom right
+        -1.0f, -1.0f, 0.0f,  // bottom left
+        -1.0f,  1.0f, 0.0f   // top left 
     };
     unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3,  // first Triangle
         1, 2, 3   // second Triangle
     };
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
-
-    glBindVertexArray(0); 
+    VertexBuffer vertex_buffer(vertices, indices, sizeof(vertices), sizeof(indices));
 
      while (!glfwWindowShouldClose(window))
     {
@@ -72,7 +67,7 @@ int main()
         glClearColor(1.f, 1.0f, 1.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         ourShader.use();
-        glBindVertexArray(VAO); 
+        vertex_buffer.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         glfwSwapBuffers(window);
         glfwPollEvents();
