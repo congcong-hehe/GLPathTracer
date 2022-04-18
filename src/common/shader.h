@@ -7,11 +7,14 @@
 class Shader
 {
 public:
-    Shader(const char* vertexPath, const char* fragmentPath);
-    void init(const char* vertexPath, const char* fragmentPath);
-    inline void use();
+    Shader();
+    Shader(const std::string &vertexPath, const std::string& fragmentPath);
+    void init(const std::string &vertexPath, const std::string& fragmentPath);
+    inline void bind();
+    inline void unbind();
     inline void setBool(const std::string& name, bool value) const;
     inline void setInt(const std::string& name, int value) const;
+    inline void setUInt(const std::string& name, int value) const;
     inline void setFloat(const std::string& name, float value) const;
     inline void setMat4(const std::string& name, const glm::mat4& mat) const;
     inline void setVec3(const std::string& name, const glm::vec3& value) const;
@@ -23,9 +26,14 @@ private:
 };
 
 // activate the shader
-void Shader::use()
+void Shader::bind()
 {
     glUseProgram(ID);
+}
+
+void Shader::unbind()
+{
+    glUseProgram(0);
 }
 
 void Shader::setBool(const std::string& name, bool value) const
@@ -36,6 +44,11 @@ void Shader::setBool(const std::string& name, bool value) const
 void Shader::setInt(const std::string& name, int value) const
 {
     glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+}
+
+void Shader::setUInt(const std::string& name, int value) const
+{
+    glUniform1ui(glGetUniformLocation(ID, name.c_str()), value);
 }
 
 void Shader::setFloat(const std::string& name, float value) const

@@ -4,14 +4,21 @@
 #include <sstream>
 #include <iostream>
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath) 
+using namespace std;
+
+Shader::Shader()
+{
+
+}
+
+Shader::Shader(const string &vertexPath, const string& fragmentPath) 
 {
     init(vertexPath, fragmentPath);
 }   
 
 
 // constructor generates the shader on the fly
-void Shader::init(const char* vertexPath, const char* fragmentPath)
+void Shader::init(const string &vertexPath, const string& fragmentPath)
 {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;
