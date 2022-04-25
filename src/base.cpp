@@ -8,7 +8,6 @@
 
 using namespace std;
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 
 int main()
@@ -34,7 +33,7 @@ int main()
         return -1;
     }
 
-    Shader path_shader(project_path + "src/shader/vs.glsl", project_path + "src/shader/path_fs.glsl");
+    Shader path_shader(project_path + "src/shader/vs.glsl", project_path + "src/shader/base_fs.glsl");
     glm::vec3 origin(0.0f, 0.0f, 0.0f);
     glm::vec3 horizontal(4.0f, 0.0f, 0.0f);
     glm::vec3 vertical(0.0f, 3.0f, 0.0f);
@@ -50,6 +49,13 @@ int main()
     path_shader.setFloat("spheres[0].radius", 0.6f);
     path_shader.setVec3("spheres[1].center", 0.0f, -100.5f, -1.0f);
     path_shader.setFloat("spheres[1].radius", 100.0f);
+
+    path_shader.setVec3("tri.p0", 0.0f, 0.5f, -1.0f);
+    path_shader.setVec3("tri.p1", -0.5f, -0.5f, -1.0f);
+    path_shader.setVec3("tri.p2", 0.5f, -0.5f, -1.0f);
+    path_shader.setVec3("tri.n0", 0.0f, 0.0f, 1.0f);
+    path_shader.setVec3("tri.n1", 0.0f, 0.0f, 1.0f);
+    path_shader.setVec3("tri.n2", 0.0f, 0.0f, 1.0f);
 
     Render render(SCR_WIDTH, SCR_HEIGHT);
 
