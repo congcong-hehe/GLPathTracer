@@ -1,6 +1,6 @@
 #version 330 core
 
-#define WIDTH 800
+#define WIDTH 600
 #define HEIGHT 600
 
 #define DEPTH 5
@@ -8,6 +8,7 @@
 #define INFINITY 100000000.0
 #define PI 3.141592653
 #define EPSILON 0.00001
+#define PDF 1.0 / (2 * PI)
 
 struct Material
 {
@@ -43,13 +44,14 @@ struct Sphere
 {
     vec3 center;
     float radius;
+    uint material_id;
 };
 
 struct Triangle
 {
     vec3 p0, p1, p2;    // 位置
     vec3 n0, n1, n2;    // 法线
-    // Material material;
+    uint material_id;
 };
 
 struct Intersection
@@ -60,13 +62,23 @@ struct Intersection
     Material material;
 };
 
+uniform Material materials[5];
 uniform uint frame_count;
+uniform sampler2D imgTex;
+uniform Camera camera;
+uniform Sphere spheres[3];
+uniform Triangle tris[12];
+
+in vec2 TexCoords;
+out vec4 FragColor;
+
+uint static_seed;
 
 // 生成随机数https://blog.demofox.org/2020/05/25/casual-shadertoy-path-tracing-1-basic-camera-diffuse-emissive/
 uint seed = uint(
     uint((gl_FragCoord.x * 0.5 + 0.5) * WIDTH)  * uint(1973) + 
     uint((gl_FragCoord.y * 0.5 + 0.5) * HEIGHT) * uint(9277) + 
-    uint(frame_count) * uint(26699)) | uint(1);
+    uint(frame_count + static_seed) * uint(26699)) | uint(1);
 
 uint wang_hash(inout uint seed) {
     seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
@@ -135,6 +147,7 @@ bool hitSphere(Ray ray, Sphere sphere, float t_min, float t_max, out Intersectio
     inter.t = root;
     inter.position = pointAt(root, ray);
     inter.normal = (inter.position - sphere.center) / sphere.radius;
+    inter.material = materials[sphere.material_id];
 
     if(dot(inter.normal, ray.dir) > 0)  // 如果光源打到球的内部
     {
@@ -154,83 +167,100 @@ bool hitTriangle(Ray ray, Triangle tri, float t_min, float t_max, out Intersecti
     vec3 s2 = cross(s, edge1);
 
     float a = dot(s1, edge1);
-    if(abs(a) < EPSILON || a < 0)
+    if(a < EPSILON)
         return false;
-    float t = dot(s2, edge2) / a;
+
+    float b1 = dot(s1, s);
+    if(b1 < 0 || b1 > a)
+        return false;
+
+    float b2 = dot(s2, ray.dir);
+    if(b2 < 0 || b1 + b2 > a)
+        return false;
+
+    float inv_a = 1.0 / a;
+
+    float t = dot(s2, edge2) * inv_a;
     if(t < EPSILON || t < t_min || t > t_max)
         return false;
-    float b1 = dot(s1, s) / a;
-    if(b1 < 0 || b1 > 1)
-        return false;
-    float b2 = dot(s2, ray.dir) / a;
-    if(b2 < 0 || b1 + b2 > 1)
-        return false;
-    vec3 norm = tri.n0 * (1 - b1 - b2) + tri.n1 * b1 + tri.n2 * b2;
+
+    b1 *= inv_a;
+    b2 *= inv_a;
+
+    vec3 norm = tri.n0;
     if(dot(norm, ray.dir) > 0)
         return false;
     
     inter.t = t;
     inter.position = pointAt(t, ray);
-    // inter.material = tri.material;
+    inter.material = materials[tri.material_id];
     inter.normal = norm;
 
     return true;
 }
 
-
-uniform Camera camera;
-uniform Sphere spheres[2];
-
 bool hitWorld(Ray ray, out Intersection inter)
 {
     float closet_inter_t = INFINITY;
     bool if_tag = false;
-    for(int i = 0; i < 2; ++i)
+    for(int i = 0; i < 12; ++i)
+    {
+        Intersection inter_temp;
+        if(hitTriangle(ray, tris[i], 0, closet_inter_t, inter_temp))
+        {
+            if_tag = true;
+            closet_inter_t = inter_temp.t;
+            inter = inter_temp;
+        }
+    }
+    for(int i = 0; i < 1; ++i)
     {
         Intersection inter_temp;
         if(hitSphere(ray, spheres[i], 0, closet_inter_t, inter_temp))
         {
             if_tag = true;
-            closet_inter_t = inter.t;
+            closet_inter_t = inter_temp.t;
             inter = inter_temp;
         }
     }
+
     return if_tag;
 }
 
-vec3 trace(Intersection inter)
+vec3 trace(Intersection inter, Ray ray)
 {
-    vec3 indir = vec3(1);
+    // 如果打到光源
+    if(inter.material.isEmissive == true)
+        return inter.material.color;
+
+    vec3 indir_filtration = vec3(1);
+    vec3 result = vec3(0);
 
     for(int i = 0; i < DEPTH; ++i)
     {
-        vec3 wi = toWorld(sampleHemisphere(), inter.normal);
+        indir_filtration *= inter.material.color;
+        vec3 wi = toWorld(sampleHemisphere(), inter.normal);    //  得到一条光线的方向
+        float NdotL = dot(wi, inter.normal);
 
-        Ray ray;
         ray.dir = wi;
         ray.ori = inter.position;
         
         Intersection new_inter;
         if(!hitWorld(ray, new_inter))
         {
-            float t = 0.5 * (normalize(ray.dir).y + 1.0);
-            indir *= (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
             break;
         }
-
-        indir *= inter.normal;
-
+        
+        if(new_inter.material.isEmissive)
+        {
+            result += new_inter.material.color * indir_filtration * NdotL / PDF;
+        }
         inter = new_inter;
     }
 
-    return indir;
+    return result;
 }
 
-out vec4 FragColor;
-uniform sampler2D imgTex;
-in vec2 TexCoords;
-
-uniform Triangle tri;
 
 void main()
 {
@@ -238,26 +268,21 @@ void main()
     float v = (gl_FragCoord.y - 0.5 + rand()) / (HEIGHT - 1);
     Ray ray;
     ray.ori = camera.ori;
-    ray.dir = camera.lower_left_corner + u * camera.horizontal + v * camera.vertical - camera.ori;
+    ray.dir = normalize(camera.lower_left_corner + u * camera.horizontal + v * camera.vertical - camera.ori);
 
     vec3 color = vec3(0);
-    Intersection inter;
-    // if(hitWorld(ray, inter))
-    // {
-    //     color += trace(inter);
-    // }
-    // else // 如果没有命中
-    // {
-    //     float t = 0.5 * (normalize(ray.dir).y + 1.0);
-    //     color += ((1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0));
-    // }
-    if(hitTriangle(ray, tri, 0, INFINITY, inter))
-        color = vec3(1.0, 0.0, 0.0);
-    else color = tri.p0;
-    // if(hitSphere(ray, spheres[0], 0, INFINITY, inter))
-    //     color = vec3(1.0, 0.0, 0.0);
+    int spp = 10;
+    static_seed = 0u;
+    for(int i = 0; i < 10; ++i)
+    {
+        Intersection inter;
+        if(hitWorld(ray, inter))
+        {
+            color += trace(inter, ray) / spp;
+        }
+        static_seed ++;
+    }
 
-    vec4 pixColor =  vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
-    vec4 textureColor = texture(imgTex, TexCoords);
-    FragColor = mix(textureColor, pixColor, 1.0 / (frame_count));
+    vec3 textureColor = texture(imgTex, TexCoords).rgb;
+    FragColor = vec4(mix(textureColor, color, 1.0 / float(frame_count)), 1.0);
 }

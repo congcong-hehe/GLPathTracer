@@ -58,6 +58,7 @@ Render::Render(unsigned int width, unsigned int height) : width_(width), height_
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     output_shader_.init("../../../../src/shader/vs.glsl", "../../../../src/shader/output_fs.glsl");
+    temp_shader_.init("../../../../src/shader/vs.glsl", "../../../../src/shader/temp_fs.glsl");
 }
 
 Render::~Render()
@@ -80,7 +81,7 @@ void Render::draw(Shader& shader)
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) // 检测帧缓冲是否完整
     {
         glBindTexture(GL_TEXTURE_2D, path_texture_);
-        output_shader_.bind();
+        temp_shader_.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     }
 

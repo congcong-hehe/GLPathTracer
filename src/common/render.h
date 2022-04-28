@@ -17,6 +17,7 @@ private:
     unsigned int height_;
 
     Shader output_shader_;
+    Shader temp_shader_;
 
 public:
     Render(unsigned int width, unsigned int height);
