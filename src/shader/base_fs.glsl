@@ -15,10 +15,8 @@ struct Material
     bool isEmissive;    // 是否发光
     vec3 color; // 颜色
     float specularRate; // 反射光的占比
-    float roughness;    // 粗糙度
     float refractRate;  // 折射光占比
     float refractAngle; // 折射率
-    float refractRoughness; // 折射粗糙度
 };
 
 struct Ray
@@ -62,7 +60,7 @@ struct Intersection
     Material material;
 };
 
-uniform Material materials[5];
+uniform Material materials[7];
 uniform uint frame_count;
 uniform sampler2D imgTex;
 uniform Camera camera;
@@ -213,7 +211,7 @@ bool hitWorld(Ray ray, out Intersection inter)
             inter = inter_temp;
         }
     }
-    for(int i = 0; i < 1; ++i)
+    for(int i = 0; i < 3; ++i)
     {
         Intersection inter_temp;
         if(hitSphere(ray, spheres[i], 0, closet_inter_t, inter_temp))
@@ -239,7 +237,22 @@ vec3 trace(Intersection inter, Ray ray)
     for(int i = 0; i < DEPTH; ++i)
     {
         indir_filtration *= inter.material.color;
-        vec3 wi = toWorld(sampleHemisphere(), inter.normal);    //  得到一条光线的方向
+
+        vec3 wi;
+        float r = rand();
+        if(r < inter.material.specularRate) // 完全镜面反射
+        {
+            wi = reflect(ray.dir, inter.normal);
+        }
+        else if(r > inter.material.specularRate && r < inter.material.refractRate)  // 完全折射
+        {
+            wi = refract(ray.dir, inter.normal, inter.material.refractAngle);
+        }
+        else
+        {
+            wi = toWorld(sampleHemisphere(), inter.normal);    //  得到一条光线的方向
+        }
+
         float NdotL = dot(wi, inter.normal);
 
         ray.dir = wi;
