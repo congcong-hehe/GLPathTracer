@@ -54,17 +54,13 @@ int main()
     path_shader.setVec3("camera.lower_left_corner", origin - horizontal / 2.0f - vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length));
 
     path_shader.setVec3("materials[0].color", 1.0f, 1.0f, 1.0f);    // 白色漫反射
-    path_shader.setFloat("material[0].specularRate", 0.0f);
-    path_shader.setFloat("material[0].refraceRate", 0.0f);
-    
-    path_shader.setVec3("materials[1].color", 50.0f, 50.0f, 50.0f);    // 光源
+    path_shader.setFloat("materials[0].specularRate", 0.0f);
+    path_shader.setFloat("materials[0].refraceRate", 0.0f);
+
+    path_shader.setVec3("materials[1].color", 1.8f, 0.0f, 0.0f);    // 红色
+    path_shader.setFloat("materials[1].specularRate", 0.0f);
+    path_shader.setFloat("materials[1].refraceRate", 0.0f);
     path_shader.setBool("materials[1].isEmissive", true);
-
-    path_shader.setVec3("materials[2].color", 1.0f, 0.0f, 0.0f);    // 红色
-
-    path_shader.setVec3("materials[4].color", 0.5f, 1.0f, 1.0f);    // 蓝色
-
-    path_shader.setVec3("materials[3].color", 0.5f, 0.5f, 1.0f);    // 紫色
 
     path_shader.setVec3("aabb_min", -1.5f, -1.5f, -1.5f);
     path_shader.setVec3("aabb_max", 1.5f, 1.5f, 1.5f);
@@ -76,7 +72,7 @@ int main()
     path_shader.setVec3("tris[0].n0", 0.0f, 0.0f, 1.0f);
     path_shader.setVec3("tris[0].n1", 0.0f, 0.0f, 1.0f);
     path_shader.setVec3("tris[0].n2", 0.0f, 0.0f, 1.0f);
-    path_shader.setUInt("tris[0].material_id", 4);
+    path_shader.setUInt("tris[0].material_id", 0);
 
     path_shader.setVec3("tris[1].p0", -2.0f, 2.0f, -2.0f);
     path_shader.setVec3("tris[1].p1", 2.0f, -2.0f, -2.0f);
@@ -84,7 +80,7 @@ int main()
     path_shader.setVec3("tris[1].n0", 0.0f, 0.0f, 1.0f);
     path_shader.setVec3("tris[1].n1", 0.0f, 0.0f, 1.0f);
     path_shader.setVec3("tris[1].n2", 0.0f, 0.0f, 1.0f);
-    path_shader.setUInt("tris[1].material_id", 4);
+    path_shader.setUInt("tris[1].material_id", 0);
 
     // 左侧面
     path_shader.setVec3("tris[2].p0", -2.0f, 2.0f, 2.0f);
@@ -93,7 +89,7 @@ int main()
     path_shader.setVec3("tris[2].n0", 1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[2].n1", 1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[2].n2", 1.0f, 0.0f, 0.0f);
-    path_shader.setUInt("tris[2].material_id", 3);
+    path_shader.setUInt("tris[2].material_id", 0);
 
     path_shader.setVec3("tris[3].p0", -2.0f, 2.0f, -2.0f);
     path_shader.setVec3("tris[3].p1", -2.0f, -2.0f, 2.0f);
@@ -101,7 +97,7 @@ int main()
     path_shader.setVec3("tris[3].n0", 1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[3].n1", 1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[3].n2", 1.0f, 0.0f, 0.0f);
-    path_shader.setUInt("tris[3].material_id", 3);
+    path_shader.setUInt("tris[3].material_id", 0);
 
     // 右侧面
     path_shader.setVec3("tris[4].p0", 2.0f, 2.0f, -2.0f);
@@ -110,7 +106,7 @@ int main()
     path_shader.setVec3("tris[4].n0", -1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[4].n1", -1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[4].n2", -1.0f, 0.0f, 0.0f);
-    path_shader.setUInt("tris[4].material_id", 3);
+    path_shader.setUInt("tris[4].material_id", 0);
 
     path_shader.setVec3("tris[5].p0", 2.0f, 2.0f, -2.0f);
     path_shader.setVec3("tris[5].p1", 2.0f, -2.0f, -2.0f);
@@ -118,7 +114,7 @@ int main()
     path_shader.setVec3("tris[5].n0", -1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[5].n1", -1.0f, 0.0f, 0.0f);
     path_shader.setVec3("tris[5].n2", -1.0f, 0.0f, 0.0f);
-    path_shader.setUInt("tris[5].material_id", 3);
+    path_shader.setUInt("tris[5].material_id", 0);
 
     // 上面
     path_shader.setVec3("tris[6].p0", -2.0f, 2.0f, -2.0f);
@@ -153,23 +149,6 @@ int main()
     path_shader.setVec3("tris[9].n1", 0.0f, 1.0f, 0.0f);
     path_shader.setVec3("tris[9].n2", 0.0f, 1.0f, 0.0f);
     path_shader.setUInt("tris[9].material_id", 0);
-
-    // 顶部光源
-    path_shader.setVec3("tris[10].p0", -0.8f, 2.0f, -0.8f);
-    path_shader.setVec3("tris[10].p1", 0.8f, 2.0f, 0.8f);
-    path_shader.setVec3("tris[10].p2", -0.8f, 2.0f, 0.8f);
-    path_shader.setVec3("tris[10].n0", 0.0f, -1.0f, 0.0f);
-    path_shader.setVec3("tris[10].n1", 0.0f, -1.0f, 0.0f);
-    path_shader.setVec3("tris[10].n2", 0.0f, -1.0f, 0.0f);
-    path_shader.setUInt("tris[10].material_id", 1);
-
-    path_shader.setVec3("tris[11].p0", -0.8f, 2.0f, -0.8f);
-    path_shader.setVec3("tris[11].p1", 0.8f, 2.0f, -0.8f);
-    path_shader.setVec3("tris[11].p2", 0.8f, 2.0f, 0.8f);
-    path_shader.setVec3("tris[11].n0", 0.0f, -1.0f, 0.0f);
-    path_shader.setVec3("tris[11].n1", 0.0f, -1.0f, 0.0f);
-    path_shader.setVec3("tris[11].n2", 0.0f, -1.0f, 0.0f);
-    path_shader.setUInt("tris[11].material_id", 1);
 
     Render render(SCR_WIDTH, SCR_HEIGHT);
 

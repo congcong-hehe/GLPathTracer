@@ -53,11 +53,11 @@ struct Intersection
     Material material;
 };
 
-uniform Material materials[5];
+uniform Material materials[2];
 uniform uint frame_count;
 uniform sampler2D imgTex;
 uniform Camera camera;
-uniform Triangle tris[12];
+uniform Triangle tris[10];
 uniform vec3 aabb_min;
 uniform vec3 aabb_max;
 
@@ -159,10 +159,7 @@ bool rejectTest(vec3 raa_t, vec3 enter, vec3 span)
 }
 
 // 生成随机数https://blog.demofox.org/2020/05/25/casual-shadertoy-path-tracing-1-basic-camera-diffuse-emissive/
-uint seed = uint(
-    uint((gl_FragCoord.x * 0.5 + 0.5) * WIDTH)  * uint(1973) + 
-    uint((gl_FragCoord.y * 0.5 + 0.5) * HEIGHT) * uint(9277) + 
-    uint(frame_count + static_seed) * uint(26699)) | uint(1);
+uint seed;
 
 uint wang_hash(inout uint seed) {
     seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
@@ -278,7 +275,7 @@ bool hitImplicitSurface(Ray ray, float t_min, float t_max, out Intersection inte
                 inter.position = vec_enter + t * vec_span;
                 inter.t = ((inter.position - ray.ori) / ray.dir).x;
                 inter.normal = normalize(vec3(inter.position));
-                inter.material = materials[2];
+                inter.material = materials[1];
                 return true;
             }
             t_span *= 0.5;
@@ -296,7 +293,7 @@ bool hitWorld(Ray ray, out Intersection inter)
     float closet_inter_t = INFINITY;
     bool if_tag = false;
     Intersection inter_temp;
-    for(int i = 0; i < 12; ++i)
+    for(int i = 0; i < 10; ++i)
     {
         if(hitTriangle(ray, tris[i], 0, closet_inter_t, inter_temp))
         {
@@ -377,8 +374,13 @@ void main()
     vec3 color = vec3(0);
     int spp = 10;
     static_seed = 0u;
-    for(int i = 0; i < 10; ++i)
+    for(int i = 0; i < spp; ++i)
     {
+        seed = uint(
+            uint(gl_FragCoord.y)  * uint(1973) + 
+            uint(gl_FragCoord.x) * uint(9277) + 
+            uint(frame_count + static_seed) * uint(26699)) | uint(1);
+
         Intersection inter;
         if(hitWorld(ray, inter))
         {
