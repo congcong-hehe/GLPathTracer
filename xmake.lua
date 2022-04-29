@@ -2,9 +2,9 @@ add_rules("mode.debug", "mode.release")
 
 set_languages("c++17")
 
-target("RealtimeRender")
+target("GLPathTracer")
     set_kind("binary")
-    add_files("src/base.cpp")
+    add_files("src/implicit_surface.cpp")
     add_files("src/*.c")
     add_files("src/common/*.cpp")
 
