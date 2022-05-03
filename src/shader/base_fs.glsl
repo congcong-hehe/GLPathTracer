@@ -236,7 +236,8 @@ vec3 trace(Intersection inter, Ray ray)
 
     for(int i = 0; i < DEPTH; ++i)
     {
-        indir_filtration *= inter.material.color;
+        if(!inter.material.isEmissive)  // 把光源也看做反射项，但是光源的color太大，默认作为vec3（1）
+            indir_filtration *= inter.material.color;
 
         vec3 wi;
         float r = rand();
@@ -267,6 +268,7 @@ vec3 trace(Intersection inter, Ray ray)
         if(new_inter.material.isEmissive)
         {
             result += new_inter.material.color * indir_filtration * NdotL / PDF;
+            break;
         }
         inter = new_inter;
     }

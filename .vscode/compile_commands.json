@@ -1,8 +1,8 @@
 [
 {
   "directory": "D:\\study_data\\pro\\mypro\\PathTracing\\GL_PathTracer\\GLPathTracer",
-  "arguments": ["C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX64\\x64\\cl.exe", "/c", "/EHsc", "/nologo", "/std:c++17", "/Ithird\\include", "/Fobuild\\.objs\\GLPathTracer\\windows\\x64\\release\\src\\implicit_surface.cpp.obj", "src\\implicit_surface.cpp"],
-  "file": "src\\implicit_surface.cpp"
+  "arguments": ["C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.28.29910\\bin\\HostX64\\x64\\cl.exe", "/c", "/EHsc", "/nologo", "/std:c++17", "/Ithird\\include", "/Fobuild\\.objs\\GLPathTracer\\windows\\x64\\release\\src\\base.cpp.obj", "src\\base.cpp"],
+  "file": "src\\base.cpp"
 },
 {
   "directory": "D:\\study_data\\pro\\mypro\\PathTracing\\GL_PathTracer\\GLPathTracer",
