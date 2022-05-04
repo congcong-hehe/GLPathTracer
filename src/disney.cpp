@@ -41,7 +41,7 @@ int main()
         return -1;
     }
 
-    Shader path_shader(project_path + "src/shader/vs.glsl", project_path + "src/shader/base_fs.glsl");
+    Shader path_shader(project_path + "src/shader/vs.glsl", project_path + "src/shader/disney_fs.glsl");
     glm::vec3 origin(0.0f, 0.0f, 10.0f);
     glm::vec3 horizontal(4.0f, 0.0f, 0.0f);
     glm::vec3 vertical(0.0f, 4.0f, 0.0f);
@@ -53,42 +53,51 @@ int main()
     path_shader.setVec3("camera.vertical", vertical);
     path_shader.setVec3("camera.lower_left_corner", origin - horizontal / 2.0f - vertical / 2.0f - glm::vec3(0.0f, 0.0f, focal_length));
 
-    path_shader.setVec3("materials[0].color", 1.0f, 1.0f, 1.0f);    // 白色漫反射
-    path_shader.setFloat("materials[0].specularRate", 0.0f);
-    path_shader.setFloat("materials[0].refraceRate", 0.0f);
+    path_shader.setVec3("materials[0].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setFloat("materials[0].metallic", 0.0f);
     
-    path_shader.setVec3("materials[1].color", 5.0f, 5.0f, 5.0f);    // 光源
-    path_shader.setBool("materials[1].isEmissive", true);
+    path_shader.setVec3("materials[1].baseColor", 1.0f, 1.0f, 1.0f);    // 光源
+    path_shader.setVec3("materials[1].emissive", 10.0, 10.0, 10.0);
+    path_shader.setFloat("material[0].metallic", 0.0f);
 
-    path_shader.setVec3("materials[2].color", 1.0f, 0.5f, 0.5f);    // 红色
+    path_shader.setVec3("materials[2].baseColor", 1.0f, 0.5f, 0.5f);    // 红色
 
-    path_shader.setVec3("materials[3].color", 0.5f, 1.0f, 1.0f);    // 蓝色
+    path_shader.setVec3("materials[3].baseColor", 0.5f, 1.0f, 1.0f);    // 蓝色
 
-    path_shader.setVec3("materials[4].color", 0.5f, 0.5f, 1.0f);    // 紫色
+    path_shader.setVec3("materials[4].baseColor", 0.5f, 0.5f, 1.0f);    // 紫色
 
-    path_shader.setVec3("materials[5].color", 1.0f, 1.0f, 1.0f);    // 镜面反射
-    path_shader.setFloat("materials[5].specularRate", 1.0f);
-    path_shader.setFloat("materials[5].refractRate", 0.0f);
+    path_shader.setVec3("materials[5].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setFloat("materials[5].metallic", 0.2f);
+    path_shader.setFloat("materials[5].specular", 0.3f);
+    path_shader.setFloat("materials[5].specularTint", 0.3f);
+    path_shader.setFloat("materials[5].roughness", 0.1f);
 
-    path_shader.setVec3("materials[6].color", 1.0f, 1.0f, 1.0f);    // 折射
-    path_shader.setFloat("materials[6].specularRate", 0.1f);
-    path_shader.setFloat("materials[6].refractRate", 1.0f);
-    path_shader.setFloat("materials[6].refractAngle", 0.1f);
+    path_shader.setVec3("materials[6].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setFloat("materials[6].metallic", 0.2f);
+    path_shader.setFloat("materials[6].specular", 1.0f);
+    path_shader.setFloat("materials[6].specularTint", 0.5f);
+    path_shader.setFloat("materials[6].roughness", 0.2f);
 
-    // 第一个球，散射
+    path_shader.setVec3("materials[7].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setFloat("materials[7].metallic", 0.2f);
+    path_shader.setFloat("materials[7].specular", 0.5f);
+    path_shader.setFloat("materials[7].specularTint", 0.5f);
+    path_shader.setFloat("materials[7].roughness", 0.3f);
+
+    // 第一个球
     path_shader.setVec3("spheres[0].center", -1.35f, -1.4f, 2.0f);
     path_shader.setFloat("spheres[0].radius", 0.6f);
-    path_shader.setUInt("spheres[0].material_id", 0);
+    path_shader.setUInt("spheres[0].material_id", 5);
 
-    // 第二个球， 镜面反射
+    // 第二个球
     path_shader.setVec3("spheres[1].center", 0.f, -1.4f, 2.0f);
     path_shader.setFloat("spheres[1].radius", 0.6f);
     path_shader.setUInt("spheres[1].material_id", 6);
 
-    // 第三个球， 折射
+    // 第三个球
     path_shader.setVec3("spheres[2].center", 1.35f, -1.4f, 2.0f);
     path_shader.setFloat("spheres[2].radius", 0.6f);
-    path_shader.setUInt("spheres[2].material_id", 5);
+    path_shader.setUInt("spheres[2].material_id", 7);
 
     // 后面
     path_shader.setVec3("tris[0].p0", -2.0f, 2.0f, 0.0f);

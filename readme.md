@@ -16,7 +16,9 @@
 * https://blog.csdn.net/weixin_44176696/article/details/119044396
 * https://github.com/knightcrawler25/GLSL-PathTracer
 * Knoll A, Hijazi Y, Kensler A, et al. Fast ray tracing of arbitrary implicit surfaces with interval and affine arithmetic[C]//Computer Graphics Forum. Oxford, UK: Blackwell Publishing Ltd, 2009, 28(1): 26-40.
+* https://github.com/wdas/brdf/blob/main/src/brdfs/disney.brdf
 
 ## 问题？
 1. 从图像中心开始会出现波纹形状？
 2. 隐式曲面法线精确计算？
+3. brdf收敛速度慢，噪点很多

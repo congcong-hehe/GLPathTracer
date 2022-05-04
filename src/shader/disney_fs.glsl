@@ -12,12 +12,78 @@
 
 struct Material
 {
-    bool isEmissive;    // 是否发光
-    vec3 color; // 颜色
-    float specularRate; // 反射光的占比
-    float refractRate;  // 折射光占比
-    float refractAngle; // 折射率
+    vec3 emissive;    // 是否发光
+    vec3 baseColor; // 基本颜色
+    float metallic; // 金属度，漫反射的比例
+    float specular;     // 镜面反射的强度
+    float specularTint;     // 控制镜面反射的颜色，在baseColor和vec(1)之间插值
+    float roughness;    // 粗糙度
 };
+
+float SchlickFresnel(float u)
+{
+    float m = clamp(1-u, 0, 1);
+    float m2 = m * m;
+    return m2 * m2 * m;
+}
+
+float GTR1(float NdotH, float a) {
+    if (a >= 1) return 1/PI;
+    float a2 = a*a;
+    float t = 1 + (a2-1)*NdotH*NdotH;
+    return (a2-1) / (PI*log(a2)*t);
+}
+
+float GTR2(float NdotH, float a) {
+    float a2 = a*a;
+    float t = 1 + (a2-1)*NdotH*NdotH;
+    return a2 / (PI * t*t);
+}
+
+float smithG_GGX(float NdotV, float alphaG) {
+    float a = alphaG*alphaG;
+    float b = NdotV*NdotV;
+    return 1 / (NdotV + sqrt(a + b - a*b));
+}
+
+// https://github.com/wdas/brdf/blob/main/src/brdfs/disney.brdf
+// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
+// 只实现漫反射和镜面反射
+vec3 brdf(vec3 V, vec3 N, vec3 L, in Material material)
+{
+    // 预计算常用数值
+    float NdotL = dot(N, L);
+    float NdotV = dot(N, V);
+    if(NdotL < 0 || NdotV < 0) return vec3(0);
+    vec3 H = normalize(L + V);
+    float NdotH = dot(N, H);
+    float LdotH = dot(L, H);
+
+    vec3 Cdlin = material.baseColor;
+    float Cdlum = 0.3 * Cdlin.r + 0.6 * Cdlin.g  + 0.1 * Cdlin.b;
+    vec3 Ctint = (Cdlum > 0) ? (Cdlin/Cdlum) : (vec3(1)); 
+    vec3 Cspec = material.specular * mix(vec3(1), Ctint, material.specularTint);
+    vec3 Cspec0 = mix(0.08*Cspec, Cdlin, material.metallic); // 0° 镜面反射颜色
+
+    // 漫反射
+    float Fd90 = 0.5 + 2.0 * LdotH * LdotH * material.roughness;
+    float FL = SchlickFresnel(NdotL);
+    float FV = SchlickFresnel(NdotV);
+    float Fd = mix(1.0, Fd90, FL) * mix(1.0, Fd90, FV);
+    vec3 diffuse = Fd * Cdlin / PI;
+
+    // 镜面反射
+    float alpha = material.roughness * material.roughness;
+    float Ds = GTR2(NdotH, alpha);
+    float FH = SchlickFresnel(LdotH);
+    vec3 Fs = mix(Cspec0, vec3(1), FH);
+    float Gs = smithG_GGX(NdotL, material.roughness);
+    Gs *= smithG_GGX(NdotV, material.roughness);
+    vec3 specular = Gs * Fs * Ds;
+    //specular = clamp(specular, vec3(0), vec3(1));
+    
+    return diffuse * (1.0 - material.metallic) + specular;
+}
 
 struct Ray
 {
@@ -60,7 +126,7 @@ struct Intersection
     Material material;
 };
 
-uniform Material materials[7];
+uniform Material materials[8];
 uniform uint frame_count;
 uniform sampler2D imgTex;
 uniform Camera camera;
@@ -227,50 +293,34 @@ bool hitWorld(Ray ray, out Intersection inter)
 
 vec3 trace(Intersection inter, Ray ray)
 {
-    // 如果打到光源
-    if(inter.material.isEmissive == true)
-        return inter.material.color;
-
     vec3 indir_filtration = vec3(1);
     vec3 result = vec3(0);
 
+    if(inter.material.emissive != vec3(0))
+        return inter.material.emissive;
+
     for(int i = 0; i < DEPTH; ++i)
     {
+        vec3 V = -ray.dir;
+        vec3 N = inter.normal;
+        vec3 L = toWorld(sampleHemisphere(), inter.normal); 
+        float NdotL = dot(L, inter.normal);
+        
+        vec3 f_r = brdf(V, N, L, inter.material);
+        f_r = max(vec3(0), f_r);    // f_r可能存在负数
+        indir_filtration *= f_r * NdotL / PDF;
 
-        vec3 wi;
-        float r = rand();
-        if(r < inter.material.specularRate) // 完全镜面反射
-        {
-            wi = reflect(ray.dir, inter.normal);
-        }
-        else if(r > inter.material.specularRate && r < inter.material.refractRate)  // 完全折射
-        {
-            wi = refract(ray.dir, inter.normal, inter.material.refractAngle);
-        }
-        else
-        {
-            wi = toWorld(sampleHemisphere(), inter.normal);    //  得到一条光线的方向
-        }
-
-        float NdotL = dot(wi, inter.normal);
-
-        if(!inter.material.isEmissive)  // 把光源也看做反射项，但是光源的color太大，默认作为vec3（1）
-            indir_filtration *= inter.material.color;
-
-        ray.dir = wi;
+        ray.dir = L;
         ray.ori = inter.position;
         
         Intersection new_inter;
         if(!hitWorld(ray, new_inter))
         {
+            result += vec3(0.5) * indir_filtration;
             break;
         }
         
-        if(new_inter.material.isEmissive)
-        {
-            result += new_inter.material.color * indir_filtration * NdotL / PDF;
-            //break;
-        }
+        result += new_inter.material.emissive * indir_filtration;
         inter = new_inter;
     }
 
@@ -289,7 +339,7 @@ void main()
     vec3 color = vec3(0);
     int spp = 10;
     static_seed = 0u;
-    for(int i = 0; i < 10; ++i)
+    for(int i = 0; i < spp; ++i)
     {
         Intersection inter;
         if(hitWorld(ray, inter))

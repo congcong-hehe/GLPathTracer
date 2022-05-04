@@ -8,7 +8,7 @@
 #define INFINITY 100000000.0
 #define PI 3.141592653
 #define EPSILON 0.00001
-#define PDF 1.0 / (2 * PI)
+#define PDF (1.0 / (2 * PI))
 
 struct Material
 {
@@ -348,13 +348,13 @@ vec3 trace(Intersection inter, Ray ray)
         Intersection new_inter;
         if(!hitWorld(ray, new_inter))
         {
-            result += vec3(2) * indir_filtration * NdotL / PDF;
+            result += vec3(1) * indir_filtration * NdotL;
             break;
         }
         
         if(new_inter.material.isEmissive)
         {
-            result += new_inter.material.color * indir_filtration * NdotL / PDF;
+            result += new_inter.material.color * indir_filtration * NdotL * 0.5;
         }
         inter = new_inter;
     }

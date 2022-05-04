@@ -4,7 +4,7 @@ set_languages("c++17")
 
 target("GLPathTracer")
     set_kind("binary")
-    add_files("src/base.cpp")
+    add_files("src/disney.cpp")
     add_files("src/*.c")
     add_files("src/common/*.cpp")
 
