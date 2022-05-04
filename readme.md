@@ -6,11 +6,13 @@
 * 三角形，球
 * 多帧混合
 * 光线追踪隐式曲面
+* disney brdf
 ## 结果
 ![img](image/sphere.PNG)
 
-
 ![img](image/heart.PNG)
+
+![img](image/metal.PNG)
 
 ## 参考
 * https://blog.csdn.net/weixin_44176696/article/details/119044396
