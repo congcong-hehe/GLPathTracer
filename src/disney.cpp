@@ -66,19 +66,19 @@ int main()
 
     path_shader.setVec3("materials[4].baseColor", 0.5f, 0.5f, 1.0f);    // 紫色
 
-    path_shader.setVec3("materials[5].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
-    path_shader.setFloat("materials[5].metallic", 0.2f);
+    path_shader.setVec3("materials[5].baseColor", 1.0f, 1.0f, 1.0f);
+    path_shader.setFloat("materials[5].metallic", 0.4f);
     path_shader.setFloat("materials[5].specular", 0.3f);
     path_shader.setFloat("materials[5].specularTint", 0.3f);
     path_shader.setFloat("materials[5].roughness", 0.1f);
 
-    path_shader.setVec3("materials[6].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setVec3("materials[6].baseColor", 1.0f, 1.0f, 1.0f);
     path_shader.setFloat("materials[6].metallic", 0.2f);
     path_shader.setFloat("materials[6].specular", 1.0f);
     path_shader.setFloat("materials[6].specularTint", 0.5f);
     path_shader.setFloat("materials[6].roughness", 0.2f);
 
-    path_shader.setVec3("materials[7].baseColor", 1.0f, 1.0f, 1.0f);    // 白色漫反射
+    path_shader.setVec3("materials[7].baseColor", 1.0f, 1.0f, 1.0f);
     path_shader.setFloat("materials[7].metallic", 0.2f);
     path_shader.setFloat("materials[7].specular", 0.5f);
     path_shader.setFloat("materials[7].specularTint", 0.5f);

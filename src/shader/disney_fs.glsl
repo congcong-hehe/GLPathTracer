@@ -37,6 +37,7 @@ float GTR1(float NdotH, float a) {
 float GTR2(float NdotH, float a) {
     float a2 = a*a;
     float t = 1 + (a2-1)*NdotH*NdotH;
+    if(t == 0.0) return 0.0;
     return a2 / (PI * t*t);
 }
 
@@ -80,7 +81,6 @@ vec3 brdf(vec3 V, vec3 N, vec3 L, in Material material)
     float Gs = smithG_GGX(NdotL, material.roughness);
     Gs *= smithG_GGX(NdotV, material.roughness);
     vec3 specular = Gs * Fs * Ds;
-    //specular = clamp(specular, vec3(0), vec3(1));
     
     return diffuse * (1.0 - material.metallic) + specular;
 }
@@ -154,6 +154,7 @@ uint wang_hash(inout uint seed) {
 }
  
 float rand() {
+    static_seed ++;
     return float(wang_hash(seed)) / 4294967296.0;
 }
 
@@ -182,6 +183,73 @@ vec3 toWorld(vec3 v, vec3 normal)
 	}
 	B = cross(C, normal);
 	return B * v.x + C * v.y + normal * v.z;
+}
+
+vec3 SampleGTR2(vec3 V, vec3 N, float alpha) {
+    
+    float xi_1 = rand();
+    float xi_2 = rand();
+    float phi_h = 2.0 * PI * xi_1;
+    float sin_phi_h = sin(phi_h);
+    float cos_phi_h = cos(phi_h);
+
+    float cos_theta_h = sqrt((1.0-xi_2)/(1.0+(alpha*alpha-1.0)*xi_2));
+    float sin_theta_h = sqrt(max(0.0, 1.0 - cos_theta_h * cos_theta_h));
+
+    // 采样 "微平面" 的法向量 作为镜面反射的半角向量 h 
+    vec3 H = vec3(sin_theta_h*cos_phi_h, sin_theta_h*sin_phi_h, cos_theta_h);
+    H = toWorld(H, N);   // 投影到真正的法向半球
+
+    // 根据 "微法线" 计算反射光方向
+    vec3 L = reflect(-V, H);
+
+    return L;
+}
+
+float sqr(float x) { 
+    return x*x; 
+}
+
+vec3 sampleBRDF(vec3 V, vec3 N, in Material material)
+{
+    float alpha_GTR2 = max(0.001, sqr(material.roughness));
+
+    float p_diffuse = 1.0 - material.metallic;
+    float p_specular = material.metallic;
+
+    float r3 = rand();
+
+    if(r3 < p_diffuse)
+    {
+        return toWorld(sampleHemisphere(), N);
+    }
+    else
+    {
+        return SampleGTR2(V, N, alpha_GTR2);
+    }
+}
+
+float pdfBRDF(vec3 V, vec3 N, vec3 L, in Material material)
+{
+    float NdotL = dot(N, L);
+    float NdotV = dot(N, V);
+    if(NdotL < 0 || NdotV < 0) return 0;
+
+    vec3 H = normalize(L + V);
+    float NdotH = dot(N, H);
+    float LdotH = dot(L, H);
+
+    float alpha = max(0.001, sqr(material.roughness));
+    float Ds = GTR2(NdotH, alpha); 
+
+    float pdf_diffuse = NdotL / PI;
+    float pdf_specular = Ds * NdotH / (4.0 * dot(L, H));
+
+    float p_diffuse = 1.0 - material.metallic;
+    float p_specular = material.metallic;
+
+    float pdf = p_diffuse   * pdf_diffuse + p_specular * pdf_specular;
+    return max(0, pdf);
 }
 
 bool hitSphere(Ray ray, Sphere sphere, float t_min, float t_max, out Intersection inter)
@@ -303,12 +371,13 @@ vec3 trace(Intersection inter, Ray ray)
     {
         vec3 V = -ray.dir;
         vec3 N = inter.normal;
-        vec3 L = toWorld(sampleHemisphere(), inter.normal); 
+        vec3 L = sampleBRDF(V, N, inter.material);
         float NdotL = dot(L, inter.normal);
+        if(NdotL <= 0.0) break;
         
         vec3 f_r = brdf(V, N, L, inter.material);
-        f_r = max(vec3(0), f_r);    // f_r可能存在负数
-        indir_filtration *= f_r * NdotL / PDF;
+        float pdf = pdfBRDF(V, N, L, inter.material);
+        indir_filtration *= f_r * NdotL / pdf;
 
         ray.dir = L;
         ray.ori = inter.position;
@@ -346,7 +415,6 @@ void main()
         {
             color += trace(inter, ray) / spp;
         }
-        static_seed ++;
     }
 
     vec3 textureColor = texture(imgTex, TexCoords).rgb;
